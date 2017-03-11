@@ -1,9 +1,17 @@
 package edu.nyu.cs9223.twitterstream;
 
-import edu.nyu.cs9223.bean.Twitt;
+import com.google.gson.Gson;
+import edu.nyu.cs9223.bean.Tweet;
 import twitter4j.*;
 
-public class TwitterStream extends Thread {
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class TwitterStream implements Runnable{
+    private static final String ES_URL = "https://search-cloud-computing-cl3869-mzhj7m6rkltbbqt3zdva34st7e.us-east-1.es.amazonaws.com/geo/geo-data-sample/";
     private final twitter4j.TwitterStream stream;
     private final TwitterStatusListener listener;
 
@@ -11,9 +19,11 @@ public class TwitterStream extends Thread {
         this.listener = new TwitterStatusListener() {
             @Override
             public void onStatus(Status status) {
-                Twitt twitt = new Twitt(status.getId(), status.getUser().getScreenName(),
-                        status.getText(), status.getCreatedAt(), status.getGeoLocation());
-                // push it to elastic search
+                if (status.getGeoLocation() != null) {
+                    Tweet tweet = new Tweet(status.getId(), status.getUser().getScreenName(),
+                            status.getText(), status.getCreatedAt(), status.getGeoLocation());
+                    sendToES(new Gson().toJson(tweet));
+                }
             }
         };
         this.stream = new TwitterStreamFactory().getInstance();
@@ -22,47 +32,36 @@ public class TwitterStream extends Thread {
 
     @Override
     public void run() {
-        super.run();
-
-    }
-
-    public void main(String[] args) {
-        twitter4j.TwitterStream stream = new TwitterStreamFactory().getInstance();
-        StatusListener listener = new StatusListener() {
-            @Override
-            public void onStatus(Status status) {
-
-            }
-
-            @Override
-            public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
-                //System.out.println("Got a status deletion notice id:" + statusDeletionNotice.getStatusId());
-            }
-
-            @Override
-            public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-                //System.out.println("Got track limitation notice:" + numberOfLimitedStatuses);
-            }
-
-            @Override
-            public void onScrubGeo(long userId, long upToStatusId) {
-                //System.out.println("Got scrub_geo event userId:" + userId + " upToStatusId:" + upToStatusId);
-            }
-
-            @Override
-            public void onStallWarning(StallWarning stallWarning) {
-                //Do nothing
-            }
-
-            @Override
-            public void onException(Exception e) {
-                e.printStackTrace();
-            }
-        };
-
-        stream.addListener(listener);
         stream.sample("en");
     }
 
+    private void sendToES(String json) {
+        try {
+            URL url = new URL(ES_URL);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(10000);
+            connection.setRequestProperty("Accept-Encoding", "UTF-8");
+            connection.setRequestProperty("Content-Type", "application/json");
 
+            OutputStream os = connection.getOutputStream();
+            os.write(json.getBytes("UTF-8"));
+            os.close();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String temp = null;
+            while((temp = reader.readLine()) != null) {
+                sb.append(temp).append(" ");
+            }
+            System.out.println(sb.toString());
+            reader.close();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+    }
 }

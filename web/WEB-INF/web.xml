@@ -34,7 +34,7 @@
     <!-- Define servlet's URL mapping -->
     <servlet-mapping>
         <servlet-name>TwitterMap</servlet-name>
-        <url-pattern>/twittermap</url-pattern>
+        <url-pattern>/search</url-pattern>
     </servlet-mapping>
 
     <error-page>

@@ -1,49 +1,66 @@
 package edu.nyu.cs9223.main;
 
+import edu.nyu.cs9223.twitterstream.TwitterStream;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
-/**
- * Created by shiyanch on 3/10/17.
- */
+
 public class TMServlet extends HttpServlet {
+    private static final String ES_URL = "https://search-cloud-computing-cl3869-mzhj7m6rkltbbqt3zdva34st7e.us-east-1.es.amazonaws.com/geo/geo-data-sample/";
+
+    @Override
+    public void init() throws ServletException {
+        TwitterStream stream = new TwitterStream();
+        Thread thread = new Thread(stream);
+        thread.start();
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html; charset=UTF-8");
         PrintWriter out = response.getWriter();
+        String res = queryToElasticSearch(request.getParameter("keyword"));
+        System.out.println(res);
 
         try {
-            out.println("<!DOCTYPE html>");
-            out.println("<html><head>");
-            out.println("<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>");
-            out.println("<title>Hello, World</title></head>");
-            out.println("<body>");
-            out.println("<h1>Hello, world!</h1>");  // says Hello
-            // Echo client's request information
-            out.println("<p>Request URI: " + request.getRequestURI() + "</p>");
-            out.println("<p>Protocol: " + request.getProtocol() + "</p>");
-            out.println("<p>PathInfo: " + request.getPathInfo() + "</p>");
-            out.println("<p>Remote Address: " + request.getRemoteAddr() + "</p>");
-
-            // Parse user parameters
-            out.println("<p>Who is calling: " + request.getParameter("name") + "</p>");
-            out.println("<p>How old are you: " + request.getParameter("age") + "</p>");
-
-            // Generate a random number upon each request
-            out.println("<p>A Random Number: <strong>" + Math.random() + "</strong></p>");
-            out.println("</body>");
-            out.println("</html>");
+            out.println(res);
         } finally {
-            out.close();  // Always close the output writer
+            out.close();
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         doGet(request, response);
+    }
+
+    private String queryToElasticSearch(String keyword) {
+        StringBuilder sb = new StringBuilder();
+        try {
+            URL url = new URL(ES_URL+"_search?q=text:"+keyword);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(10000);
+            connection.setRequestProperty("Accept-Encoding", "UTF-8");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.connect();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+            String temp = null;
+            while((temp = reader.readLine()) != null) {
+                sb.append(temp).append(" ");
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return sb.toString();
     }
 }
