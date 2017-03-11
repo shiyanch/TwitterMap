@@ -7,7 +7,6 @@ import edu.nyu.cs9223.util.DateConvetor;
 import twitter4j.*;
 
 public class TwitterStream implements Runnable{
-    private static final String ES_URL = "https://search-cloud-computing-cl3869-mzhj7m6rkltbbqt3zdva34st7e.us-east-1.es.amazonaws.com/test/test-twitter-data/";
     private final twitter4j.TwitterStream stream;
     private final TwitterStatusListener listener;
 

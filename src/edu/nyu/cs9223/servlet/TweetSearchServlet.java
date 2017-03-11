@@ -8,8 +8,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 
 public class TweetSearchServlet extends HttpServlet {
-    private static final String ES_URL = "https://search-cloud-computing-cl3869-mzhj7m6rkltbbqt3zdva34st7e.us-east-1.es.amazonaws.com/test/test-twitter-data/";
-
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html; charset=UTF-8");

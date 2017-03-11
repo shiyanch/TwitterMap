@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 public class TweetFetchServlet extends HttpServlet {
-    private static final String ES_URL = "https://search-cloud-computing-cl3869-mzhj7m6rkltbbqt3zdva34st7e.us-east-1.es.amazonaws.com/test/test-twitter-data/";
     private String lastTime = "";
 
     @Override

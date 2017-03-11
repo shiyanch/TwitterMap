@@ -15,6 +15,8 @@ public class ElasticSearch {
 
     public static String fetchAllTweets() {
         String json = "{\n" +
+                "\"from\": 0," +
+                "\"size\": 100," +
                 "\t\"query\" : {\n" +
                 "        \"match_all\": {}\n" +
                 "    },\n" +
@@ -25,6 +27,8 @@ public class ElasticSearch {
 
     public static String fetchLastestTweets(String lastTime) {
         String json = "{\n" +
+                "\"from\": 0," +
+                "\"size\": 100," +
                 "    \"query\": {\n" +
                 "        \"range\" : {\n" +
                 "            \"date\" : {\n" +
