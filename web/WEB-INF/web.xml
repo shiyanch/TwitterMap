@@ -28,12 +28,12 @@
     <!-- Define servlets -->
     <servlet>
         <servlet-name>TweetSearch</servlet-name>
-        <servlet-class>edu.nyu.cs9223.main.TweetSearchServlet</servlet-class>
+        <servlet-class>edu.nyu.cs9223.servlet.TweetSearchServlet</servlet-class>
     </servlet>
 
     <servlet>
         <servlet-name>TweetFetch</servlet-name>
-        <servlet-class>edu.nyu.cs9223.main.TweetFetchServlet</servlet-class>
+        <servlet-class>edu.nyu.cs9223.servlet.TweetFetchServlet</servlet-class>
     </servlet>
 
     <!-- Define servlet's URL mapping -->
