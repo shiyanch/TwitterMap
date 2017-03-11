@@ -4,13 +4,13 @@ import twitter4j.GeoLocation;
 
 import java.util.Date;
 
-public final class Twitt {
+public final class Tweet {
     private final long id;
     private final String text;
     private final String username;
     private final Date date;
     private final GeoLocation location;
-    public Twitt(long id, String username, String text, Date date, GeoLocation location) {
+    public Tweet(long id, String username, String text, Date date, GeoLocation location) {
         this.id = id;
         this.username = username;
         this.text = text;

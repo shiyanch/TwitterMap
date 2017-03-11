@@ -27,14 +27,23 @@
 
     <!-- Define servlets -->
     <servlet>
-        <servlet-name>TwitterMap</servlet-name>
-        <servlet-class>edu.nyu.cs9223.main.TMServlet</servlet-class>
+        <servlet-name>TweetSearch</servlet-name>
+        <servlet-class>edu.nyu.cs9223.main.TweetSearchServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>TweetFetch</servlet-name>
+        <servlet-class>edu.nyu.cs9223.main.TweetFetchServlet</servlet-class>
     </servlet>
 
     <!-- Define servlet's URL mapping -->
     <servlet-mapping>
-        <servlet-name>TwitterMap</servlet-name>
-        <url-pattern>/twittermap</url-pattern>
+        <servlet-name>TweetFetch</servlet-name>
+        <url-pattern>/fetch</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>TweetSearch</servlet-name>
+        <url-pattern>/search</url-pattern>
     </servlet-mapping>
 
     <error-page>
