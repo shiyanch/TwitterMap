@@ -10,8 +10,9 @@
        * element that contains the map. */
         
         #map {
-            height: 90%;
+            height: 100%;
             width: 100%;
+            position: absolute;
         }
         /* Optional: Makes the sample page fill the window. */
         
@@ -22,23 +23,58 @@
             padding: 0;
             text-align: center;
         }
+
+        #info-group{
+            position: absolute;
+            top: 10px; left: 10px;
+            z-index: 99;
+        }
     </style>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+
 </head>
 
 <body>
-    <h1>Twritter Map</h1>
-    <p>
-        <div>
-            <form>
-                <label for="searchInput">Enter Keyword: </label>
-                <input type="text" id="searchInput">
-                <input type="button" value="Search" onclick="searchKeyWord()">
-                <input type="button" value="Clear" onclick="initMap()"> </form>
-            <label> Number Of Twitters: <span id="numberOfTwitters".></label> </span> </div>
-        <p>
-            <div id="map"></div>
+
+    <!--search info-->
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">Twitter Map</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a>Number Of Twitters:</a></li>
+                    <li class="active"><a id="numberOfTwitters">250</a></li>
+                </ul>
+                <form class="navbar-form navbar-right" role="search">
+                    <input type="text" id="searchInput">
+                    <input type="button" value="Search" onclick="searchKeyWord()" class="btn btn-secondary">
+                    <input type="button" value="Clear" onclick="initMap()" class="btn btn-secondary">
+                </form>
+            </div><!--/.nav-collapse -->
+        </div><!--/.container-fluid -->
+    </nav>
+    <div id="map"></div>
+        <!--<div id="info-group">-->
+            <!--<form>-->
+                <!--<label for="searchInput">Enter Keyword: </label>-->
+                <!--<input type="text" id="searchInput">-->
+                <!--<input type="button" value="Search" onclick="searchKeyWord()" class="btn btn-primary">-->
+                <!--<input type="button" value="Clear" onclick="initMap()" class="btn btn-primary"> </form>-->
+            <!--<label> Number Of Twitters: <span id="numberOfTwitters".></span></label></div>-->
+        <!--<p>-->
+
             <script>
-                var esUrl = "https://search-cloud-computing-cl3869-mzhj7m6rkltbbqt3zdva34st7e.us-east-1.es.amazonaws.com/geo/geo-data-sample/_search";
+                //var esUrl = "https://search-cloud-computing-cl3869-mzhj7m6rkltbbqt3zdva34st7e.us-east-1.es.amazonaws.com/geo/geo-data-sample/_search";
+                var esUrl = "http://localhost:8080/";
                 var locations = [];
                 var infoWindow;
 
@@ -46,11 +82,13 @@
                     //load data to array: locations, and plot
                     getGps();
                     //init infowindow
-                    infoWindow = new google.maps.InfoWindow({});
+                    infoWindow = new google.maps.InfoWindow({
+                        maxWidth: 350
+                    });
                 }
                 //get data from url
                 function getGps() {
-                    $.getJSON(esUrl, function (data) {
+                    $.getJSON(esUrl+"fetch", function (data) {
                         putIntoLocationArray(data.hits.hits, "_source");
                         drawOnMap();
                     });
@@ -60,11 +98,19 @@
                     locations = [];
                     for (var i = 0; i < data.length; i++) {
                         var source = data[i][field];
-                        var lat = source.lat;
-                        var lng = source.lng;
+                        var lat = source.location.latitude;
+                        var lng = source.location.longitude;
+                        //other info
+                        var text = source.text;
+                        var usernmae = source.username;
+                        var datetime = source.date;
                         locations.push({
                             "lat": lat
                             , "lng": lng
+                            , "text":text
+                            , "username": usernmae
+                            , "datetime": datetime
+
                         });
                     }
                 }
@@ -72,10 +118,11 @@
                 function drawOnMap() {
                     var map = new google.maps.Map(document.getElementById('map'), {
                         zoom: 3
-                        , center: {
-                            lat: -28.024
-                            , lng: 140.887
-                        }
+                        ,
+//                        center: {
+//                            lat: -28.024
+//                            , lng: 140.887
+//                        }
                     });
                     // Create an array of alphabetical characters used to label the markers.
                     var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -108,7 +155,37 @@
                 //add listener on each gps 
                 function attachInfoWindow(marker, location) {
                     marker.addListener('click', function () {
-                        infoWindow.setContent(location["lat"].toString() + " " + location["lng"].toString());
+                        // InfoWindow content
+//                        var content = '<div id="iw-container">' +
+//                                '<div class="iw-title">'+location["username"].toString()+'</div>' +
+//                                '<div class="iw-content">' +
+//                                '<div class="iw-subTitle">'+location["text"].toString()+'</div>' +
+//                                '</p>'+
+//                                '<p>'+
+//                                '</div>' +location["datetime"].toString()+
+//                                '<div class="iw-bottom-gradient"></div>' +
+//                                '</div>';
+//                        var content = '<div id="iw-container">' +
+//                                '<div class="iw-title">Porcelain Factory of Vista Alegre</div>' +
+//                                '<div class="iw-content">' +
+//                                '<div class="iw-subTitle">History</div>' +
+//                                '<img src="images/vistalegre.jpg" alt="Porcelain Factory of Vista Alegre" height="115" width="83">' +
+//                                '<p>Founded in 1824, the Porcelain Factory of Vista Alegre was the first industrial unit dedicated to porcelain production in Portugal. For the foundation and success of this risky industrial development was crucial the spirit of persistence of its founder, José Ferreira Pinto Basto. Leading figure in Portuguese society of the nineteenth century farm owner, daring dealer, wisely incorporated the liberal ideas of the century, having become "the first example of free enterprise" in Portugal.</p>' +
+//                                '<div class="iw-subTitle">Contacts</div>' +
+//                                '<p>VISTA ALEGRE ATLANTIS, SA<br>3830-292 Ílhavo - Portugal<br>'+
+//                                '<br>Phone. +351 234 320 600<br>e-mail: geral@vaa.pt<br>www: www.myvistaalegre.com</p>'+
+//                                '</div>' +
+//                                '<div class="iw-bottom-gradient"></div>' +
+//                                '</div>';
+                        var content = '<div id="container">'+
+                                '<h3>'+location["username"].toString()+'</h3>'
+                                +'<p>'
+                                +'<span>'+location["text"].toString()+'</span>'
+                                +'<p>'+location["datetime"].toString()
+                                +'</div>';
+                        //infoWindow.setContent(location["lat"].toString() + " \n" + location["lng"].toString()+"\n"+location["username"].toString()+"\n"+location["text"].toString()+"\n"+location["datetime"].toString());
+                        infoWindow.setContent(content);
+
                         infoWindow.open(marker.get('map'), marker);
                     });
                 }
@@ -117,116 +194,13 @@
                     var keyword = document.getElementById('searchInput');
                     //alert(keyword.value);
                     var queryString = '{"query": {"match": {"lat":-33.718234}}}';
-                    //                    $.ajax({
-                    //                        type: "POST"
-                    //                        , url: esUrl
-                    //                        , data: JSON.stringify(queryString)
-                    //                        , success: function (data) {
-                    //                            alert(JSON.stringify(data));
-                    //                        }
-                    //                        , dataType: 'json'
-                    //                    });
-                    $.getJSON(esUrl + "?q=" + keyword.value, function (data) {
-                        //alert(JSON.stringify(data));
+
+                    $.getJSON(esUrl+"search?keyword=" + keyword.value, function (data) {
                         putIntoLocationArray(data.hits.hits, "_source");
                         drawOnMap();
                     });
                 }
-                //orginal sample data
-                //        var locations = [
-                //            {
-                //                lat: -31.563910
-                //                , lng: 147.154312
-                //            }
-                //            , {
-                //                lat: -33.718234
-                //                , lng: 150.363181
-                //            }
-                //            , {
-                //                lat: -33.727111
-                //                , lng: 150.371124
-                //            }
-                //            , {
-                //                lat: -33.848588
-                //                , lng: 151.209834
-                //            }
-                //            , {
-                //                lat: -33.851702
-                //                , lng: 151.216968
-                //            }
-                //            , {
-                //                lat: -34.671264
-                //                , lng: 150.863657
-                //            }
-                //            , {
-                //                lat: -35.304724
-                //                , lng: 148.662905
-                //            }
-                //            , {
-                //                lat: -36.817685
-                //                , lng: 175.699196
-                //            }
-                //            , {
-                //                lat: -36.828611
-                //                , lng: 175.790222
-                //            }
-                //            , {
-                //                lat: -37.750000
-                //                , lng: 145.116667
-                //            }
-                //            , {
-                //                lat: -37.759859
-                //                , lng: 145.128708
-                //            }
-                //            , {
-                //                lat: -37.765015
-                //                , lng: 145.133858
-                //            }
-                //            , {
-                //                lat: -37.770104
-                //                , lng: 145.143299
-                //            }
-                //            , {
-                //                lat: -37.773700
-                //                , lng: 145.145187
-                //            }
-                //            , {
-                //                lat: -37.774785
-                //                , lng: 145.137978
-                //            }
-                //            , {
-                //                lat: -37.819616
-                //                , lng: 144.968119
-                //            }
-                //            , {
-                //                lat: -38.330766
-                //                , lng: 144.695692
-                //            }
-                //            , {
-                //                lat: -39.927193
-                //                , lng: 175.053218
-                //            }
-                //            , {
-                //                lat: -41.330162
-                //                , lng: 174.865694
-                //            }
-                //            , {
-                //                lat: -42.734358
-                //                , lng: 147.439506
-                //            }
-                //            , {
-                //                lat: -42.734358
-                //                , lng: 147.501315
-                //            }
-                //            , {
-                //                lat: -42.735258
-                //                , lng: 147.438000
-                //            }
-                //            , {
-                //                lat: -43.999792
-                //                , lng: 170.463352
-                //            }
-                //      ]
+
             </script>
             <script
   src="https://code.jquery.com/jquery-3.1.1.min.js"
