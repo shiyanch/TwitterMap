@@ -2,6 +2,7 @@ package edu.nyu.cs9223.servlet;
 
 import edu.nyu.cs9223.elasticsearch.ElasticSearch;
 import edu.nyu.cs9223.twitterstream.TwitterStream;
+import edu.nyu.cs9223.util.DateConvetor;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -11,7 +12,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 public class TweetFetchServlet extends HttpServlet {
-    private static final String ES_URL = "https://search-cloud-computing-cl3869-mzhj7m6rkltbbqt3zdva34st7e.us-east-1.es.amazonaws.com/test/test-twitter-data/";
+    private String lastTime = "";
 
     @Override
     public void init() throws ServletException {
@@ -32,6 +33,8 @@ public class TweetFetchServlet extends HttpServlet {
     }
 
     private String fetchFromElasticSearch() {
-        return ElasticSearch.fetchAllTweets();
+        String temp = lastTime;
+        lastTime = DateConvetor.currentDateTime();
+        return temp.isEmpty()?ElasticSearch.fetchAllTweets():ElasticSearch.fetchLastestTweets(temp);
     }
 }

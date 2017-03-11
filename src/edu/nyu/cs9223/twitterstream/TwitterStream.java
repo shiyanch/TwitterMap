@@ -3,10 +3,10 @@ package edu.nyu.cs9223.twitterstream;
 import com.google.gson.Gson;
 import edu.nyu.cs9223.bean.Tweet;
 import edu.nyu.cs9223.elasticsearch.ElasticSearch;
+import edu.nyu.cs9223.util.DateConvetor;
 import twitter4j.*;
 
 public class TwitterStream implements Runnable{
-    private static final String ES_URL = "https://search-cloud-computing-cl3869-mzhj7m6rkltbbqt3zdva34st7e.us-east-1.es.amazonaws.com/test/test-twitter-data/";
     private final twitter4j.TwitterStream stream;
     private final TwitterStatusListener listener;
 
@@ -15,8 +15,9 @@ public class TwitterStream implements Runnable{
             @Override
             public void onStatus(Status status) {
                 if (status.getGeoLocation() != null) {
+                    String date = DateConvetor.convert(status.getCreatedAt());
                     Tweet tweet = new Tweet(status.getId(), status.getUser().getScreenName(),
-                            status.getText(), status.getCreatedAt(), status.getGeoLocation());
+                            status.getText(), date, status.getGeoLocation());
                     sendToES(new Gson().toJson(tweet));
                 }
             }

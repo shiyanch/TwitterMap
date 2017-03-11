@@ -8,9 +8,9 @@ public final class Tweet {
     private final long id;
     private final String text;
     private final String username;
-    private final Date date;
+    private final String date;
     private final GeoLocation location;
-    public Tweet(long id, String username, String text, Date date, GeoLocation location) {
+    public Tweet(long id, String username, String text, String date, GeoLocation location) {
         this.id = id;
         this.username = username;
         this.text = text;
@@ -30,7 +30,7 @@ public final class Tweet {
         return username;
     }
 
-    public Date getDate() {
+    public String getDate() {
         return date;
     }
 
