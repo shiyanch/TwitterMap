@@ -14,11 +14,27 @@ public class ElasticSearch {
     }
 
     public static String fetchAllTweets() {
-        return getWithParameter("_search");
+        String json = "{\n" +
+                "\t\"query\" : {\n" +
+                "        \"match_all\": {}\n" +
+                "    },\n" +
+                "    \"sort\": { \"date\": { \"order\": \"desc\" }}\n" +
+                "}";
+        return postWithBody("_search", json);
     }
 
-    public static String fetchLastestTweets() {
-        return "";
+    public static String fetchLastestTweets(String lastTime) {
+        String json = "{\n" +
+                "    \"query\": {\n" +
+                "        \"range\" : {\n" +
+                "            \"date\" : {\n" +
+                "                \"gte\" : \"" + lastTime + "\"\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "}";
+        System.out.println(json);
+        return postWithBody("_search", json);
     }
 
     public static String searchKeyWord(String keyword) {
