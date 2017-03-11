@@ -10,8 +10,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 
-public class TMServlet extends HttpServlet {
-    private static final String ES_URL = "https://search-cloud-computing-cl3869-mzhj7m6rkltbbqt3zdva34st7e.us-east-1.es.amazonaws.com/geo/geo-data-sample/";
+public class TweetSearchServlet extends HttpServlet {
+    private static final String ES_URL = "https://search-cloud-computing-cl3869-mzhj7m6rkltbbqt3zdva34st7e.us-east-1.es.amazonaws.com/test/test-twitter-data/";
 
     @Override
     public void init() throws ServletException {
@@ -24,7 +24,7 @@ public class TMServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html; charset=UTF-8");
         PrintWriter out = response.getWriter();
-        String res = queryToElasticSearch(request.getParameter("keyword"));
+        String res = queryFromElasticSearch(request.getParameter("keyword"));
         System.out.println(res);
 
         try {
@@ -39,7 +39,7 @@ public class TMServlet extends HttpServlet {
         doGet(request, response);
     }
 
-    private String queryToElasticSearch(String keyword) {
+    private String queryFromElasticSearch(String keyword) {
         StringBuilder sb = new StringBuilder();
         try {
             URL url = new URL(ES_URL+"_search?q=text:"+keyword);
