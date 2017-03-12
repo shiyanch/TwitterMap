@@ -6,15 +6,13 @@
     <meta charset="utf-8">
     <title>Marker Clustering</title>
     <style>
-        /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
-        
         #map {
             height: 100%;
             width: 100%;
             position: absolute;
+            margin-top: 0px;
+            padding-top: 0px;
         }
-        /* Optional: Makes the sample page fill the window. */
         
         html,
         body {
@@ -23,193 +21,209 @@
             padding: 0;
             text-align: center;
         }
-
-        #info-group{
-            position: absolute;
-            top: 10px; left: 10px;
-            z-index: 99;
-        }
     </style>
     <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
-
-</head>
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css"> </head>
 
 <body>
-
     <!--search info-->
-    <nav class="navbar navbar-default">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#">Twitter Map</a>
-            </div>
-            <div id="navbar" class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li><a>Number Of Twitters:</a></li>
-                    <li class="active"><a id="numberOfTwitters">250</a></li>
-                </ul>
-                <form class="navbar-form navbar-right" role="search">
-                    <input type="text" id="searchInput">
-                    <input type="button" value="Search" onclick="searchKeyWord()" class="btn btn-secondary">
-                    <input type="button" value="Clear" onclick="initMap()" class="btn btn-secondary">
-                </form>
-            </div><!--/.nav-collapse -->
-        </div><!--/.container-fluid -->
-    </nav>
+    <div class="navbar navbar-default container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button> <a class="navbar-brand" href="#">Twitter Map</a> </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a>Number Of Twitters:</a></li>
+                <li class="active"><a id="numberOfTwitters">250</a></li>
+                <li>
+                    <a id="searchResult"></a>
+                </li>
+            </ul>
+            <form class="navbar-form navbar-right" role="search">
+                <input type="text" id="searchInput">
+                <input type="button" value="Search" onclick="searchKeyWord()" class="btn btn-secondary">
+                <input type="button" value="Reset" onclick="resetMap()" class="btn btn-secondary"> </form>
+        </div>
+        <!--/.nav-collapse -->
+    </div>
+    <!--/.container-fluid -->
     <div id="map"></div>
-        <!--<div id="info-group">-->
-            <!--<form>-->
-                <!--<label for="searchInput">Enter Keyword: </label>-->
-                <!--<input type="text" id="searchInput">-->
-                <!--<input type="button" value="Search" onclick="searchKeyWord()" class="btn btn-primary">-->
-                <!--<input type="button" value="Clear" onclick="initMap()" class="btn btn-primary"> </form>-->
-            <!--<label> Number Of Twitters: <span id="numberOfTwitters".></span></label></div>-->
-        <!--<p>-->
+    <script>
+        var esUrl = window.location.href;
+        var locationMarkerArray = [];
+        var queryMarkerArray = [];
+        var infoWindow;
+        var maxCount = 10000;
+        var currentCount = 0;
+        var fetchTime;
 
-            <script>
-                //var esUrl = "https://search-cloud-computing-cl3869-mzhj7m6rkltbbqt3zdva34st7e.us-east-1.es.amazonaws.com/geo/geo-data-sample/_search";
-                var esUrl = "http://localhost:8080/";
-                var locations = [];
-                var infoWindow;
+        function initMap() {
+            clearSearchResult();
+            //load data to array: locations, and plot
+            fetchTweet(locationMarkerArray);
+            //init infowindow
+            infoWindow = new google.maps.InfoWindow({
+                maxWidth: 350
+            });
+            realTimeUpdate();
+        }
+        //call 'fetch' to obtain data
+        function fetchTweet(array) {
+            $.getJSON(esUrl + "fetch", function (data) {
+                putIntoArray(array, data.hits.hits, "_source");
+                setNumberOfTweet();
+                console.log("result: length" + array.length);
+            });
+        }
+        //real time update
+        function realTimeUpdate() {
+            fetchTime = setInterval(update, 5000);
+        }
 
-                function initMap() {
-                    //load data to array: locations, and plot
-                    getGps();
-                    //init infowindow
-                    infoWindow = new google.maps.InfoWindow({
-                        maxWidth: 350
-                    });
+        function update() {
+            console.log("update data....");
+            fetchTweet(locationMarkerArray);
+            console.log("locationMarkerArray size: " + locationMarkerArray.length);
+        }
+
+        function putIntoArray(array, data, field) {
+            if (data.length == 0) {
+                //alert("sorry, there is no data.");
+                return false;
+            }
+            var tempArray = [];
+            for (var i = 0; i < data.length; i++) {
+                var sourceInfo = data[i][field];
+                var lat = sourceInfo.location.latitude;
+                var lng = sourceInfo.location.longitude;
+                //other info
+                var text = sourceInfo.text;
+                var usernmae = sourceInfo.username;
+                var datetime = sourceInfo.date;
+                tempArray.push({
+                    "lat": lat
+                    , "lng": lng
+                    , "text": text
+                    , "username": usernmae
+                    , "datetime": datetime
+                });
+            }
+            // declare map
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 3
+                , center: {
+                    lat: -28.024
+                    , lng: 140.887
                 }
-                //get data from url
-                function getGps() {
-                    $.getJSON(esUrl+"fetch", function (data) {
-                        putIntoLocationArray(data.hits.hits, "_source");
-                        drawOnMap();
-                    });
+            });
+            // Create an array of alphabetical characters used to label the markers.
+            var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            var markers = tempArray.map(function (location, i) {
+                var marker = new google.maps.Marker({
+                    position: location
+                    , label: labels[i % labels.length]
+                , });
+                //add listener
+                attachInfoWindow(marker, location);
+                return marker;
+            });
+            console.log("what is array:" + array.length);
+            array = array.concat(markers);
+            currentCount++;
+            if (currentCount > maxCount) {
+                //stop timer
+                clearInterval(fetchTime);
+            }
+            addCluster(array);
+            return array;
+        }
+
+        function addCluster(markerArray) {
+            // declare map
+            console.log("markerArray length:" + markerArray.length);
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 3
+                , center: {
+                    lat: -28.024
+                    , lng: 140.887
                 }
+            });
+            for (var i = 0; i < markerArray.length; i++) {
+                markerArray[i].setMap(map);
+            }
+            // Add a marker clusterer to manage the markers.
+            var markerCluster = new MarkerClusterer(map, markerArray, {
+                imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
+            });
+            console.log("set bound...");
+            //set bound
+            var bounds = new google.maps.LatLngBounds();
+            for (var i = 0; i < markerArray.length; i++) {
+                bounds.extend(markerArray[i].getPosition());
+            }
+            map.fitBounds(bounds);
+            //update total number of twitters
+        }
+        //add listener on each gps 
+        function attachInfoWindow(marker, location) {
+            marker.addListener('click', function () {
+                // InfoWindow content
+                var content = '<div id="container">' + '<h3>' + location["username"].toString() + '</h3>' + '<p>' + '<span>' + location["text"].toString() + '</span>' + '<p>' + location["datetime"].toString() + '</div>';
+                infoWindow.setContent(content);
+                infoWindow.open(marker.get('map'), marker);
+            });
+        }
 
-                function putIntoLocationArray(data, field) {
-                    locations = [];
-                    for (var i = 0; i < data.length; i++) {
-                        var source = data[i][field];
-                        var lat = source.location.latitude;
-                        var lng = source.location.longitude;
-                        //other info
-                        var text = source.text;
-                        var usernmae = source.username;
-                        var datetime = source.date;
-                        locations.push({
-                            "lat": lat
-                            , "lng": lng
-                            , "text":text
-                            , "username": usernmae
-                            , "datetime": datetime
+        function clearMarker(markerArray) {
+            for (var i = 0; i < markerArray.lastIndexOf; i++) {
+                markerArray[i].setMap(null);
+            }
+        }
 
-                        });
-                    }
+        function searchKeyWord() {
+            //stop timer
+            clearInterval(fetchTime);
+            //clear map
+            clearMarker(locationMarkerArray);
+            //search
+            var keyword = document.getElementById('searchInput');
+            $.getJSON(esUrl + "search?keyword=" + keyword.value, function (data) {
+                queryMarkerArray = putIntoArray(queryMarkerArray, data.hits.hits, "_source");
+                document.getElementById("searchResult").innerHTML = "Matching result:" + queryMarkerArray.length;
+            });
+        }
+        //set numbber of results
+        function setNumberOfTweet() {
+            document.getElementById('numberOfTwitters').innerHTML = locationMarkerArray.length;
+        }
+        //clear
+        function clearSearchResult() {
+            queryMarkerArray = [];
+            document.getElementById("searchResult").innerHTML = "";
+        }
+        //reset to origin
+        function resetMap() {
+            //clear queryMarkerArray
+            //re-plot locationMarkerArray.
+            clearSearchResult();
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 3
+                , center: {
+                    lat: -28.024
+                    , lng: 140.887
                 }
-
-                function drawOnMap() {
-                    var map = new google.maps.Map(document.getElementById('map'), {
-                        zoom: 3
-                        ,
-//                        center: {
-//                            lat: -28.024
-//                            , lng: 140.887
-//                        }
-                    });
-                    // Create an array of alphabetical characters used to label the markers.
-                    var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                    // Add some markers to the map.
-                    // Note: The code uses the JavaScript Array.prototype.map() method to
-                    // create an array of markers based on a given "locations" array.
-                    // The map() method here has nothing to do with the Google Maps API.
-                    var markers = locations.map(function (location, i) {
-                        var marker = new google.maps.Marker({
-                            position: location
-                            , label: labels[i % labels.length]
-                        });
-                        //add listener
-                        attachInfoWindow(marker, location);
-                        return marker;
-                    });
-                    // Add a marker clusterer to manage the markers.
-                    var markerCluster = new MarkerClusterer(map, markers, {
-                        imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
-                    });
-                    //set bound
-                    var bounds = new google.maps.LatLngBounds();
-                    for (var i = 0; i < markers.length; i++) {
-                        bounds.extend(markers[i].getPosition());
-                    }
-                    map.fitBounds(bounds);
-                    //update total number of twitters
-                    document.getElementById('numberOfTwitters').innerHTML = locations.length;
-                }
-                //add listener on each gps 
-                function attachInfoWindow(marker, location) {
-                    marker.addListener('click', function () {
-                        // InfoWindow content
-//                        var content = '<div id="iw-container">' +
-//                                '<div class="iw-title">'+location["username"].toString()+'</div>' +
-//                                '<div class="iw-content">' +
-//                                '<div class="iw-subTitle">'+location["text"].toString()+'</div>' +
-//                                '</p>'+
-//                                '<p>'+
-//                                '</div>' +location["datetime"].toString()+
-//                                '<div class="iw-bottom-gradient"></div>' +
-//                                '</div>';
-//                        var content = '<div id="iw-container">' +
-//                                '<div class="iw-title">Porcelain Factory of Vista Alegre</div>' +
-//                                '<div class="iw-content">' +
-//                                '<div class="iw-subTitle">History</div>' +
-//                                '<img src="images/vistalegre.jpg" alt="Porcelain Factory of Vista Alegre" height="115" width="83">' +
-//                                '<p>Founded in 1824, the Porcelain Factory of Vista Alegre was the first industrial unit dedicated to porcelain production in Portugal. For the foundation and success of this risky industrial development was crucial the spirit of persistence of its founder, José Ferreira Pinto Basto. Leading figure in Portuguese society of the nineteenth century farm owner, daring dealer, wisely incorporated the liberal ideas of the century, having become "the first example of free enterprise" in Portugal.</p>' +
-//                                '<div class="iw-subTitle">Contacts</div>' +
-//                                '<p>VISTA ALEGRE ATLANTIS, SA<br>3830-292 Ílhavo - Portugal<br>'+
-//                                '<br>Phone. +351 234 320 600<br>e-mail: geral@vaa.pt<br>www: www.myvistaalegre.com</p>'+
-//                                '</div>' +
-//                                '<div class="iw-bottom-gradient"></div>' +
-//                                '</div>';
-                        var content = '<div id="container">'+
-                                '<h3>'+location["username"].toString()+'</h3>'
-                                +'<p>'
-                                +'<span>'+location["text"].toString()+'</span>'
-                                +'<p>'+location["datetime"].toString()
-                                +'</div>';
-                        //infoWindow.setContent(location["lat"].toString() + " \n" + location["lng"].toString()+"\n"+location["username"].toString()+"\n"+location["text"].toString()+"\n"+location["datetime"].toString());
-                        infoWindow.setContent(content);
-
-                        infoWindow.open(marker.get('map'), marker);
-                    });
-                }
-
-                function searchKeyWord() {
-                    var keyword = document.getElementById('searchInput');
-                    //alert(keyword.value);
-                    var queryString = '{"query": {"match": {"lat":-33.718234}}}';
-
-                    $.getJSON(esUrl+"search?keyword=" + keyword.value, function (data) {
-                        putIntoLocationArray(data.hits.hits, "_source");
-                        drawOnMap();
-                    });
-                }
-
-            </script>
-            <script
-  src="https://code.jquery.com/jquery-3.1.1.min.js"
-  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
-  crossorigin="anonymous"></script>
-            <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
-            </script>
-            <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC78_6hsgGIFMN65oEvD-5-6CrU7L__ia0&callback=initMap">
-            </script>
+            });
+            console.log("reset locationMarkerArray length: " + locationMarkerArray.length);
+            for (var i = 0; i < locationMarkerArray.length; i++) {
+                locationMarkerArray[i].setMap(map);
+            }
+            realTimeUpdate();
+        };
+    </script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+    <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC78_6hsgGIFMN65oEvD-5-6CrU7L__ia0&callback=initMap">
+    </script>
 </body>
 
 </html>
