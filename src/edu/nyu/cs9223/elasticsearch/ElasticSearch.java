@@ -37,7 +37,22 @@ public class ElasticSearch {
                 "        }\n" +
                 "    }\n" +
                 "}";
-        System.out.println(json);
+        return postWithBody("_search", json);
+    }
+
+    public static String filterTweetWithinDistance(double lat, double lon, long distance) {
+        String json = "{\n" +
+                "   \"query\" : {\n" +
+                "      \"bool\" : { \n" +
+                "         \"must\" : {\n" +
+                "           \"geo_distance\": {\n" +
+                "               \"distance\": \"" + distance + "km\", \n" +
+                "               \"location\": [" + lat + ", " + lon + "]\n" +
+                "           }\n" +
+                "         }\n" +
+                "      }\n" +
+                "   }\n" +
+                "}";
         return postWithBody("_search", json);
     }
 
