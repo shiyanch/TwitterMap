@@ -88,7 +88,7 @@
         function putIntoArray(array, data, field) {
             if (data.length == 0) {
                 //alert("sorry, there is no data.");
-                return false;
+                return array;
             }
             var tempArray = [];
             for (var i = 0; i < data.length; i++) {
@@ -133,6 +133,7 @@
                 //stop timer
                 clearInterval(fetchTime);
             }
+            //plot
             addCluster(array);
             return array;
         }
@@ -173,12 +174,6 @@
             });
         }
 
-        function clearMarker(markerArray) {
-            for (var i = 0; i < markerArray.lastIndexOf; i++) {
-                markerArray[i].setMap(null);
-            }
-        }
-
         function searchKeyWord() {
             //stop timer
             clearInterval(fetchTime);
@@ -190,6 +185,12 @@
                 queryMarkerArray = putIntoArray(queryMarkerArray, data.hits.hits, "_source");
                 document.getElementById("searchResult").innerHTML = "Matching result:" + queryMarkerArray.length;
             });
+        }
+
+        function clearMarker(markerArray) {
+            for (var i = 0; i < markerArray.lastIndexOf; i++) {
+                markerArray[i].setMap(null);
+            }
         }
         //set numbber of results
         function setNumberOfTweet() {
