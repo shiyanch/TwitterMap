@@ -81,6 +81,7 @@
         function fetchTweet() {
             $.getJSON(esUrl + "fetch", function (data) {
                 if(data.length == 0){
+                    console.log("get 0 result");
                     fetchNewest();
                 }else{
                     putIntoArray(data.hits.hits, "_source");
@@ -92,6 +93,7 @@
         //
         function fetchNewest(){
             $.getJSON(esUrl + "fetch?all", function (data) {
+                console.log("fetch all size:"+data.length);
                 putIntoArray(data.hits.hits, "_source");
                 setNumberOfTweet();
                 console.log("fetch newest twitter locationMarkerArray: length" + locationMarkerArray.length);
@@ -208,7 +210,7 @@
             }
             map.fitBounds(bounds);
         }
-        //add listener on each gps 
+        //add listener on each gps
         function attachInfoWindow(marker, location) {
             marker.addListener('click', function () {
                 // InfoWindow content
@@ -315,7 +317,7 @@
             //            for (var i = 0; i < locationMarkerArray.length; i++) {
             //                locationMarkerArray[i].setMap(map);
             //            }
-            //            
+            //
             drawMap();
             realTimeUpdate();
         }

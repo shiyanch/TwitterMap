@@ -24,7 +24,7 @@ public class TweetFetchServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html; charset=UTF-8");
-        String res = fetchFromElasticSearch();
+        String res = fetchFromElasticSearch(request.getParameter("all"));
         System.out.println(res);
 
         try (PrintWriter out = response.getWriter()){
@@ -32,7 +32,10 @@ public class TweetFetchServlet extends HttpServlet {
         }
     }
 
-    private String fetchFromElasticSearch() {
+    private String fetchFromElasticSearch(String parameter) {
+        if (parameter != null) {
+            return ElasticSearch.fetchAllTweets();
+        }
         String temp = lastTime;
         lastTime = DateConvetor.currentDateTime();
         return temp.isEmpty()?ElasticSearch.fetchAllTweets():ElasticSearch.fetchLastestTweets(temp);
