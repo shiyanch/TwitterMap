@@ -25,7 +25,6 @@ public class TweetFetchServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html; charset=UTF-8");
         String res = fetchFromElasticSearch(request.getParameter("all"));
-        System.out.println(res);
 
         try (PrintWriter out = response.getWriter()){
             out.println(res);

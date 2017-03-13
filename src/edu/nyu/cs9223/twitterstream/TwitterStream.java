@@ -19,7 +19,6 @@ public class TwitterStream implements Runnable{
                     Tweet tweet = new Tweet(status.getId(), status.getUser().getScreenName(),
                             status.getText(), date, status.getGeoLocation());
                     sendToES(new Gson().toJson(tweet));
-                    System.out.println(new Gson().toJson(tweet));
                 }
             }
         };

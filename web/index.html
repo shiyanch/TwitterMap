@@ -76,10 +76,17 @@
             maxWidth: 350
         });
         realTimeUpdate();
+
+        $(document).keypress(
+            function(event){
+                if (event.which == '13') {
+                    event.preventDefault();
+                }
+        });
     }
     //call 'fetch' to obtain data
     function fetchTweet() {
-        $.getJSON(esUrl + "fetch", function (data) {
+        $.getJSON(esUrl + "fetch?all", function (data) {
             if(data.length == 0){
                 console.log("get 0 result");
                 fetchNewest();
@@ -348,7 +355,7 @@
             infoWindow = new google.maps.InfoWindow({
                 maxWidth: 350
             });
-            var content = '<div>lat:'+pinMark.getPosition().lat()+"  lng: "+pinMark.getPosition().lng() +"<div>"+'<button class="btn btn-secondary" onClick="searchNearBy()">OK</button></div>';
+            var content = '<div><h4>Explore the World!</h4> <h5>Drag the pin to anywhere you interested</h5><button class="btn btn-secondary" onClick="searchNearBy()">Search Nearby</button></div>';
             infoWindow.setContent(content);
             infoWindow.open(pinMark.get('map'), pinMark);
         });

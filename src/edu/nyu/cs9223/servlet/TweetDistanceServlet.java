@@ -18,7 +18,6 @@ public class TweetDistanceServlet extends HttpServlet {
         double lon = Double.parseDouble(request.getParameter("lon"));
         long distance = Long.parseLong(request.getParameter("distance"));
         String res = fetchWithinDistance(lat, lon, distance);
-        System.out.println(res);
 
         try (PrintWriter out = response.getWriter()){
             out.println(res);

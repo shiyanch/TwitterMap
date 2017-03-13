@@ -12,7 +12,6 @@ public class TweetSearchServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html; charset=UTF-8");
         String res = queryFromElasticSearch(request.getParameter("keyword"));
-        System.out.println(res);
 
         try (PrintWriter out = response.getWriter()){
             out.println(res);
