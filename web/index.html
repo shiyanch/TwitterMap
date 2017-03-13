@@ -33,12 +33,22 @@
         <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                 <li><a>Number Of Twitters:</a></li>
-                <li class="active"><a id="numberOfTwitters">250</a></li>
+                <li class="active"><a id="numberOfTwitters">100</a></li>
                 <li>
                     <a id="searchResult"></a>
                 </li>
             </ul>
             <form class="navbar-form navbar-right" role="search">
+                <input type="button" value="Drop Pin" onclick="dropPin()" class="btn btn-secondary">
+                <select class="form-control" id="distanceSel">
+                    <option disabled selected value> -- select a distance -- </option>
+                    <option value="1">1km</option>
+                    <option value="2">2km</option>
+                    <option value="3">3km</option>
+                    <option value="4">4km</option>
+                    <option value="5">5km</option>
+                </select>
+                <span>&nbsp;</span>
                 <input type="text" id="searchInput">
                 <input type="button" value="Search" onclick="searchKeyWord()" class="btn btn-secondary">
                 <input type="button" value="Reset" onclick="resetMap()" class="btn btn-secondary"> </form>
@@ -49,17 +59,18 @@
     <div id="map"></div>
     <script>
         var esUrl = window.location.href;
-        var locationMarkerArray = [];
-        var queryMarkerArray = [];
+        var locationMarkerArray = new Array();
+        var queryMarkerArray = new Array();
         var infoWindow;
         var maxCount = 10000;
         var currentCount = 0;
         var fetchTime;
+        var pinMark;
 
         function initMap() {
             clearSearchResult();
             //load data to array: locations, and plot
-            fetchTweet(locationMarkerArray);
+            fetchTweet();
             //init infowindow
             infoWindow = new google.maps.InfoWindow({
                 maxWidth: 350
@@ -67,34 +78,46 @@
             realTimeUpdate();
         }
         //call 'fetch' to obtain data
-        function fetchTweet(array) {
+        function fetchTweet() {
             $.getJSON(esUrl + "fetch", function (data) {
-                putIntoArray(array, data.hits.hits, "_source");
+                if(data.length == 0){
+                    console.log("get 0 result");
+                    fetchNewest();
+                }else{
+                    putIntoArray(data.hits.hits, "_source");
+                    setNumberOfTweet();
+                    console.log("fetch twitter locationMarkerArray: length" + locationMarkerArray.length);
+                }
+            });
+        }
+        //
+        function fetchNewest(){
+            $.getJSON(esUrl + "fetch?all", function (data) {
+                console.log("fetch all size:"+data.length);
+                putIntoArray(data.hits.hits, "_source");
                 setNumberOfTweet();
-                console.log("result: length" + array.length);
+                console.log("fetch newest twitter locationMarkerArray: length" + locationMarkerArray.length);
             });
         }
         //real time update
         function realTimeUpdate() {
-            fetchTime = setInterval(update, 5000);
+            fetchTime = setInterval(update, 30000);
         }
 
         function update() {
-            console.log("update data....");
             fetchTweet(locationMarkerArray);
-            console.log("locationMarkerArray size: " + locationMarkerArray.length);
+            console.log("updating...  locationMarkerArray size: " + locationMarkerArray.length);
         }
 
-        function putIntoArray(array, data, field) {
+        function putIntoArray(data, field) {
             if (data.length == 0) {
                 //alert("sorry, there is no data.");
-                return array;
             }
             var tempArray = [];
             for (var i = 0; i < data.length; i++) {
                 var sourceInfo = data[i][field];
-                var lat = sourceInfo.location.latitude;
-                var lng = sourceInfo.location.longitude;
+                var lat = sourceInfo.location[0];
+                var lng = sourceInfo.location[1];
                 //other info
                 var text = sourceInfo.text;
                 var usernmae = sourceInfo.username;
@@ -126,21 +149,45 @@
                 attachInfoWindow(marker, location);
                 return marker;
             });
-            console.log("what is array:" + array.length);
-            array = array.concat(markers);
+            locationMarkerArray = locationMarkerArray.concat(markers);
             currentCount++;
             if (currentCount > maxCount) {
                 //stop timer
                 clearInterval(fetchTime);
             }
             //plot
-            addCluster(array);
-            return array;
+            drawMap();
         }
 
-        function addCluster(markerArray) {
+        function drawQueryMap() {
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 3
+                , center: {
+                    lat: 40.7128
+                    , lng: 74.0059
+                }
+            });
+            for (var i = 0; i < queryMarkerArray.length; i++) {
+                queryMarkerArray[i].setMap(map);
+            }
+            // Add a marker clusterer to manage the markers.
+            var markerCluster = new MarkerClusterer(map, queryMarkerArray, {
+                imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
+            });
+            //set bound
+            var bounds = new google.maps.LatLngBounds();
+            for (var i = 0; i < queryMarkerArray.length; i++) {
+                bounds.extend(queryMarkerArray[i].getPosition());
+            }
+            map.fitBounds(bounds);
+            map.setCenter(bounds.getCenter());
+            //set searh result
+            document.getElementById("searchResult").innerHTML = "Matching result:" + queryMarkerArray.length;
+        }
+
+        function drawMap() {
             // declare map
-            console.log("markerArray length:" + markerArray.length);
+            console.log("add cluster locationMarkerArraylength:" + locationMarkerArray.length);
             var map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 3
                 , center: {
@@ -148,21 +195,20 @@
                     , lng: 140.887
                 }
             });
-            for (var i = 0; i < markerArray.length; i++) {
-                markerArray[i].setMap(map);
+            for (var i = 0; i < locationMarkerArray.length; i++) {
+                locationMarkerArray[i].setMap(map);
             }
             // Add a marker clusterer to manage the markers.
-            var markerCluster = new MarkerClusterer(map, markerArray, {
+            var markerCluster = new MarkerClusterer(map, locationMarkerArray, {
                 imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
             });
             console.log("set bound...");
             //set bound
             var bounds = new google.maps.LatLngBounds();
-            for (var i = 0; i < markerArray.length; i++) {
-                bounds.extend(markerArray[i].getPosition());
+            for (var i = 0; i < locationMarkerArray.length; i++) {
+                bounds.extend(locationMarkerArray[i].getPosition());
             }
             map.fitBounds(bounds);
-            //update total number of twitters
         }
         //add listener on each gps
         function attachInfoWindow(marker, location) {
@@ -175,21 +221,75 @@
         }
 
         function searchKeyWord() {
+            //clear queryMarkerArray
+            queryMarkerArray = new Array();
             //stop timer
             clearInterval(fetchTime);
             //clear map
-            clearMarker(locationMarkerArray);
+            clearMarker();
             //search
             var keyword = document.getElementById('searchInput');
             $.getJSON(esUrl + "search?keyword=" + keyword.value, function (data) {
-                queryMarkerArray = putIntoArray(queryMarkerArray, data.hits.hits, "_source");
-                document.getElementById("searchResult").innerHTML = "Matching result:" + queryMarkerArray.length;
+                putIntoQueryArray(data.hits.hits, "_source");
             });
         }
 
-        function clearMarker(markerArray) {
-            for (var i = 0; i < markerArray.lastIndexOf; i++) {
-                markerArray[i].setMap(null);
+        function putIntoQueryArray(data, field) {
+            if (data.length == 0) {
+                alert("sorry, there is no data. go back to the origin");
+                resetMap();
+                return;
+            }
+            alert(JSON.stringify(data));
+            clearSearchResult();
+            var tempArray = [];
+            for (var i = 0; i < data.length; i++) {
+                var sourceInfo = data[i][field];
+                var lat = sourceInfo.location[0];
+                var lng = sourceInfo.location[1];
+                //other info
+                var text = sourceInfo.text;
+                var usernmae = sourceInfo.username;
+                var datetime = sourceInfo.date;
+                tempArray.push({
+                    "lat": lat
+                    , "lng": lng
+                    , "text": text
+                    , "username": usernmae
+                    , "datetime": datetime
+                });
+            }
+            console.log("search temp array length:" + tempArray.length);
+            // declare map
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 3
+                , center: {
+                    lat: -28.024
+                    , lng: 140.887
+                }
+            });
+            // Create an array of alphabetical characters used to label the markers.
+            var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            var markers = tempArray.map(function (location, i) {
+                var marker = new google.maps.Marker({
+                    position: location
+                    , label: labels[i % labels.length]
+                , });
+                //add listener
+                attachInfoWindow(marker, location);
+                return marker;
+            });
+            console.log("query result length:" + markers.length);
+            queryMarkerArray = queryMarkerArray.concat(markers);
+            //plot
+            drawQueryMap();
+            //update search result
+            console.log("queryMarkerArray length:" + queryMarkerArray.length);
+        }
+        //clear marker
+        function clearMarker() {
+            for (var i = 0; i < locationMarkerArray.length; i++) {
+                locationMarkerArray[i].setMap(null);
             }
         }
         //set numbber of results
@@ -198,7 +298,7 @@
         }
         //clear
         function clearSearchResult() {
-            queryMarkerArray = [];
+            queryMarkerArray = new Array();
             document.getElementById("searchResult").innerHTML = "";
         }
         //reset to origin
@@ -214,11 +314,56 @@
                 }
             });
             console.log("reset locationMarkerArray length: " + locationMarkerArray.length);
-            for (var i = 0; i < locationMarkerArray.length; i++) {
-                locationMarkerArray[i].setMap(map);
-            }
+            //            for (var i = 0; i < locationMarkerArray.length; i++) {
+            //                locationMarkerArray[i].setMap(map);
+            //            }
+            //
+            drawMap();
             realTimeUpdate();
-        };
+        }
+
+
+        //bonus
+        function dropPin(){
+            //stop timer first
+            clearInterval(fetchTime);
+            // declare map
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 10
+                , center: {
+                    lat: 40.7128
+                    , lng: -73.968285
+                }
+            });
+
+            pinMark = new google.maps.Marker({
+                draggable: true,
+                position: map.getCenter(),
+                map: map,
+                title: "Pin"
+            });
+            //add confirm window
+            pinMark.addListener('click', function () {
+                // InfoWindow content
+                infoWindow = new google.maps.InfoWindow({
+                    maxWidth: 350
+                });
+                var content = '<div>lat:'+pinMark.getPosition().lat()+"  lng: "+pinMark.getPosition().lng() +"<div>"+'<button class="btn btn-secondary" onClick="searchNearBy()">OK</button></div>';
+                infoWindow.setContent(content);
+                infoWindow.open(pinMark.get('map'), pinMark);
+            });
+        }
+
+        //search query
+        function searchNearBy(){
+            var distanceSel = document.getElementById("distanceSel");
+            var distance = $("#distanceSel").val();
+            alert(distance);
+            alert(pinMark.getPosition() + ", distance:"+distance);
+            $.getJSON(esUrl + "search?keyword=" + keyword.value, function (data) {
+                putIntoQueryArray(data.hits.hits, "_source");
+            });
+        }
     </script>
     <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
     <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
