@@ -18,7 +18,7 @@ public class TweetFetchServlet extends HttpServlet {
     public void init() throws ServletException {
         TwitterStream stream = new TwitterStream();
         Thread thread = new Thread(stream);
-        thread.start();
+//        thread.start();
     }
 
     @Override
