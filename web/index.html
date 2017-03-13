@@ -79,7 +79,7 @@
         }
         //call 'fetch' to obtain data
         function fetchTweet() {
-            $.getJSON(esUrl + "fetch", function (data) {
+            $.getJSON(esUrl + "fetch?all", function (data) {
                 if(data.length == 0){
                     console.log("get 0 result");
                     fetchNewest();
