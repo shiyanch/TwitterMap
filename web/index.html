@@ -49,8 +49,8 @@
     <div id="map"></div>
     <script>
         var esUrl = window.location.href;
-        var locationMarkerArray = new Array();
-        var queryMarkerArray = new Array();
+        var locationMarkerArray = [];
+        var queryMarkerArray = [];
         var infoWindow;
         var maxCount = 10000;
         var currentCount = 0;
@@ -59,7 +59,7 @@
         function initMap() {
             clearSearchResult();
             //load data to array: locations, and plot
-            fetchTweet();
+            fetchTweet(locationMarkerArray);
             //init infowindow
             infoWindow = new google.maps.InfoWindow({
                 maxWidth: 350
@@ -67,32 +67,34 @@
             realTimeUpdate();
         }
         //call 'fetch' to obtain data
-        function fetchTweet() {
+        function fetchTweet(array) {
             $.getJSON(esUrl + "fetch", function (data) {
-                putIntoArray(data.hits.hits, "_source");
+                putIntoArray(array, data.hits.hits, "_source");
                 setNumberOfTweet();
-                console.log("fetch twitter locationMarkerArray: length" + locationMarkerArray.length);
+                console.log("result: length" + array.length);
             });
         }
         //real time update
         function realTimeUpdate() {
-            fetchTime = setInterval(update, 30000);
+            fetchTime = setInterval(update, 5000);
         }
 
         function update() {
+            console.log("update data....");
             fetchTweet(locationMarkerArray);
-            console.log("updating...  locationMarkerArray size: " + locationMarkerArray.length);
+            console.log("locationMarkerArray size: " + locationMarkerArray.length);
         }
 
-        function putIntoArray(data, field) {
+        function putIntoArray(array, data, field) {
             if (data.length == 0) {
                 //alert("sorry, there is no data.");
+                return array;
             }
             var tempArray = [];
             for (var i = 0; i < data.length; i++) {
                 var sourceInfo = data[i][field];
-                var lat = sourceInfo.location[0];
-                var lng = sourceInfo.location[1];
+                var lat = sourceInfo.location.latitude;
+                var lng = sourceInfo.location.longitude;
                 //other info
                 var text = sourceInfo.text;
                 var usernmae = sourceInfo.username;
@@ -124,44 +126,21 @@
                 attachInfoWindow(marker, location);
                 return marker;
             });
-            locationMarkerArray = locationMarkerArray.concat(markers);
+            console.log("what is array:" + array.length);
+            array = array.concat(markers);
             currentCount++;
             if (currentCount > maxCount) {
                 //stop timer
                 clearInterval(fetchTime);
             }
             //plot
-            drawMap();
+            addCluster(array);
+            return array;
         }
 
-        function drawQueryMap() {
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 3
-                , center: {
-                    lat: -28.024
-                    , lng: 140.887
-                }
-            });
-            for (var i = 0; i < queryMarkerArray.length; i++) {
-                queryMarkerArray[i].setMap(map);
-            }
-            // Add a marker clusterer to manage the markers.
-            var markerCluster = new MarkerClusterer(map, queryMarkerArray, {
-                imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
-            });
-            //set bound
-            var bounds = new google.maps.LatLngBounds();
-            for (var i = 0; i < queryMarkerArray.length; i++) {
-                bounds.extend(queryMarkerArray[i].getPosition());
-            }
-            map.fitBounds(bounds);
-            //set searh result
-            document.getElementById("searchResult").innerHTML = "Matching result:" + queryMarkerArray.length;
-        }
-
-        function drawMap() {
+        function addCluster(markerArray) {
             // declare map
-            console.log("add cluster locationMarkerArraylength:" + locationMarkerArray.length);
+            console.log("markerArray length:" + markerArray.length);
             var map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 3
                 , center: {
@@ -169,22 +148,23 @@
                     , lng: 140.887
                 }
             });
-            for (var i = 0; i < locationMarkerArray.length; i++) {
-                locationMarkerArray[i].setMap(map);
+            for (var i = 0; i < markerArray.length; i++) {
+                markerArray[i].setMap(map);
             }
             // Add a marker clusterer to manage the markers.
-            var markerCluster = new MarkerClusterer(map, locationMarkerArray, {
+            var markerCluster = new MarkerClusterer(map, markerArray, {
                 imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
             });
             console.log("set bound...");
             //set bound
             var bounds = new google.maps.LatLngBounds();
-            for (var i = 0; i < locationMarkerArray.length; i++) {
-                bounds.extend(locationMarkerArray[i].getPosition());
+            for (var i = 0; i < markerArray.length; i++) {
+                bounds.extend(markerArray[i].getPosition());
             }
             map.fitBounds(bounds);
+            //update total number of twitters
         }
-        //add listener on each gps 
+        //add listener on each gps
         function attachInfoWindow(marker, location) {
             marker.addListener('click', function () {
                 // InfoWindow content
@@ -195,74 +175,21 @@
         }
 
         function searchKeyWord() {
-            //clear queryMarkerArray
-            queryMarkerArray = new Array();
             //stop timer
             clearInterval(fetchTime);
             //clear map
-            clearMarker();
+            clearMarker(locationMarkerArray);
             //search
             var keyword = document.getElementById('searchInput');
             $.getJSON(esUrl + "search?keyword=" + keyword.value, function (data) {
-                putIntoQueryArray(data.hits.hits, "_source");
+                queryMarkerArray = putIntoArray(queryMarkerArray, data.hits.hits, "_source");
+                document.getElementById("searchResult").innerHTML = "Matching result:" + queryMarkerArray.length;
             });
         }
 
-        function putIntoQueryArray(data, field) {
-            if (data.length == 0) {
-                alert("sorry, there is no data. go back to the origin");
-                resetMap();
-                return;
-            }
-            clearSearchResult();
-            var tempArray = [];
-            for (var i = 0; i < data.length; i++) {
-                var sourceInfo = data[i][field];
-                var lat = sourceInfo.location[0];
-                var lng = sourceInfo.location[1];
-                //other info
-                var text = sourceInfo.text;
-                var usernmae = sourceInfo.username;
-                var datetime = sourceInfo.date;
-                tempArray.push({
-                    "lat": lat
-                    , "lng": lng
-                    , "text": text
-                    , "username": usernmae
-                    , "datetime": datetime
-                });
-            }
-            console.log("search temp array length:" + tempArray.length);
-            // declare map
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 3
-                , center: {
-                    lat: -28.024
-                    , lng: 140.887
-                }
-            });
-            // Create an array of alphabetical characters used to label the markers.
-            var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            var markers = tempArray.map(function (location, i) {
-                var marker = new google.maps.Marker({
-                    position: location
-                    , label: labels[i % labels.length]
-                , });
-                //add listener
-                attachInfoWindow(marker, location);
-                return marker;
-            });
-            console.log("query result length:" + markers.length);
-            queryMarkerArray = queryMarkerArray.concat(markers);
-            //plot
-            drawQueryMap();
-            //update search result
-            console.log("queryMarkerArray length:" + queryMarkerArray.length);
-        }
-        //clear marker
-        function clearMarker() {
-            for (var i = 0; i < locationMarkerArray.length; i++) {
-                locationMarkerArray[i].setMap(null);
+        function clearMarker(markerArray) {
+            for (var i = 0; i < markerArray.lastIndexOf; i++) {
+                markerArray[i].setMap(null);
             }
         }
         //set numbber of results
@@ -271,7 +198,7 @@
         }
         //clear
         function clearSearchResult() {
-            queryMarkerArray = new Array();
+            queryMarkerArray = [];
             document.getElementById("searchResult").innerHTML = "";
         }
         //reset to origin
@@ -287,11 +214,9 @@
                 }
             });
             console.log("reset locationMarkerArray length: " + locationMarkerArray.length);
-            //            for (var i = 0; i < locationMarkerArray.length; i++) {
-            //                locationMarkerArray[i].setMap(map);
-            //            }
-            //            
-            drawMap();
+            for (var i = 0; i < locationMarkerArray.length; i++) {
+                locationMarkerArray[i].setMap(map);
+            }
             realTimeUpdate();
         };
     </script>
