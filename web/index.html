@@ -13,7 +13,7 @@
             margin-top: 0px;
             padding-top: 0px;
         }
-        
+
         html,
         body {
             height: 100%;
@@ -26,350 +26,355 @@
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css"> </head>
 
 <body>
-    <!--search info-->
-    <div class="navbar navbar-default container-fluid">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button> <a class="navbar-brand" href="#">Twitter Map</a> </div>
-        <div id="navbar" class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-                <li><a>Number Of Twitters:</a></li>
-                <li class="active"><a id="numberOfTwitters">100</a></li>
-                <li>
-                    <a id="searchResult"></a>
-                </li>
-            </ul>
-            <form class="navbar-form navbar-right" role="search">
-                <input type="button" value="Drop Pin" onclick="dropPin()" class="btn btn-secondary">
-                <select class="form-control" id="distanceSel">
-                    <option disabled selected value> -- select a distance -- </option>
-                    <option value="1">1km</option>
-                    <option value="2">2km</option>
-                    <option value="3">3km</option>
-                    <option value="4">4km</option>
-                    <option value="5">5km</option>
-                </select>
-                <span>&nbsp;</span>
-                <input type="text" id="searchInput">
-                <input type="button" value="Search" onclick="searchKeyWord()" class="btn btn-secondary">
-                <input type="button" value="Reset" onclick="resetMap()" class="btn btn-secondary"> </form>
-        </div>
-        <!--/.nav-collapse -->
+<!--search info-->
+<div class="navbar navbar-default container-fluid">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button> <a class="navbar-brand" href="#">Twitter Map</a> </div>
+    <div id="navbar" class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+            <li><a>Number Of Twitters:</a></li>
+            <li class="active"><a id="numberOfTwitters">100</a></li>
+            <li>
+                <a id="searchResult"></a>
+            </li>
+        </ul>
+        <form class="navbar-form navbar-right" role="search">
+            <input type="button" value="Drop Pin" onclick="dropPin()" class="btn btn-secondary">
+            <select class="form-control" id="distanceSel">
+                <option disabled selected value> -- select a distance -- </option>
+                <option value="1">1km</option>
+                <option value="2">2km</option>
+                <option value="3">3km</option>
+                <option value="4">4km</option>
+                <option value="5">5km</option>
+            </select>
+            <span>&nbsp;</span>
+            <input type="text" id="searchInput">
+            <input type="button" value="Search" onclick="searchKeyWord()" class="btn btn-secondary">
+            <input type="button" value="Reset" onclick="resetMap()" class="btn btn-secondary"> </form>
     </div>
-    <!--/.container-fluid -->
-    <div id="map"></div>
-    <script>
-        var esUrl = window.location.href;
-        var locationMarkerArray = new Array();
-        var queryMarkerArray = new Array();
-        var infoWindow;
-        var maxCount = 10000;
-        var currentCount = 0;
-        var fetchTime;
-        var pinMark;
+    <!--/.nav-collapse -->
+</div>
+<!--/.container-fluid -->
+<div id="map"></div>
+<script>
+    var esUrl = window.location.href;
+    var locationMarkerArray = new Array();
+    var queryMarkerArray = new Array();
+    var infoWindow;
+    var maxCount = 10000;
+    var currentCount = 0;
+    var fetchTime;
+    var pinMark;
 
-        function initMap() {
-            clearSearchResult();
-            //load data to array: locations, and plot
-            fetchTweet();
-            //init infowindow
+    function initMap() {
+        clearSearchResult();
+        //load data to array: locations, and plot
+        fetchTweet();
+        //init infowindow
+        infoWindow = new google.maps.InfoWindow({
+            maxWidth: 350
+        });
+        realTimeUpdate();
+    }
+    //call 'fetch' to obtain data
+    function fetchTweet() {
+        $.getJSON(esUrl + "fetch", function (data) {
+            if(data.length == 0){
+                console.log("get 0 result");
+                fetchNewest();
+            }else{
+                putIntoArray(data.hits.hits, "_source");
+                setNumberOfTweet();
+                console.log("fetch twitter locationMarkerArray: length" + locationMarkerArray.length);
+            }
+        });
+    }
+    //
+    function fetchNewest(){
+        $.getJSON(esUrl + "fetch?all", function (data) {
+            console.log("fetch all size:"+data.length);
+            putIntoArray(data.hits.hits, "_source");
+            setNumberOfTweet();
+            console.log("fetch newest twitter locationMarkerArray: length" + locationMarkerArray.length);
+        });
+    }
+    //real time update
+    function realTimeUpdate() {
+        fetchTime = setInterval(update, 30000);
+    }
+
+    function update() {
+        fetchTweet(locationMarkerArray);
+        console.log("updating...  locationMarkerArray size: " + locationMarkerArray.length);
+    }
+
+    function putIntoArray(data, field) {
+        if (data.length == 0) {
+            //alert("sorry, there is no data.");
+        }
+        var tempArray = [];
+        for (var i = 0; i < data.length; i++) {
+            var sourceInfo = data[i][field];
+            var lat = sourceInfo.location[0];
+            var lng = sourceInfo.location[1];
+            //other info
+            var text = sourceInfo.text;
+            var usernmae = sourceInfo.username;
+            var datetime = sourceInfo.date;
+            tempArray.push({
+                "lat": lat
+                , "lng": lng
+                , "text": text
+                , "username": usernmae
+                , "datetime": datetime
+            });
+        }
+        // declare map
+        var map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 3
+            , center: {
+                lat: -28.024
+                , lng: 140.887
+            }
+        });
+        // Create an array of alphabetical characters used to label the markers.
+        var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        var markers = tempArray.map(function (location, i) {
+            var marker = new google.maps.Marker({
+                position: location
+                , label: labels[i % labels.length]
+                , });
+            //add listener
+            attachInfoWindow(marker, location);
+            return marker;
+        });
+        locationMarkerArray = locationMarkerArray.concat(markers);
+        currentCount++;
+        if (currentCount > maxCount) {
+            //stop timer
+            clearInterval(fetchTime);
+        }
+        //plot
+        drawMap();
+    }
+
+    function drawQueryMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 3
+            , center: {
+                lat: 40.7128
+                , lng: 74.0059
+            }
+        });
+        for (var i = 0; i < queryMarkerArray.length; i++) {
+            queryMarkerArray[i].setMap(map);
+        }
+        // Add a marker clusterer to manage the markers.
+        var markerCluster = new MarkerClusterer(map, queryMarkerArray, {
+            imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
+        });
+        //set bound
+        var bounds = new google.maps.LatLngBounds();
+        for (var i = 0; i < queryMarkerArray.length; i++) {
+            bounds.extend(queryMarkerArray[i].getPosition());
+        }
+        map.fitBounds(bounds);
+        map.setCenter(bounds.getCenter());
+        //set searh result
+        document.getElementById("searchResult").innerHTML = "Matching result:" + queryMarkerArray.length;
+    }
+
+    function drawMap() {
+        // declare map
+        console.log("add cluster locationMarkerArraylength:" + locationMarkerArray.length);
+        var map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 3
+            , center: {
+                lat: -28.024
+                , lng: 140.887
+            }
+        });
+        for (var i = 0; i < locationMarkerArray.length; i++) {
+            locationMarkerArray[i].setMap(map);
+        }
+        // Add a marker clusterer to manage the markers.
+        var markerCluster = new MarkerClusterer(map, locationMarkerArray, {
+            imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
+        });
+        console.log("set bound...");
+        //set bound
+        var bounds = new google.maps.LatLngBounds();
+        for (var i = 0; i < locationMarkerArray.length; i++) {
+            bounds.extend(locationMarkerArray[i].getPosition());
+        }
+        map.fitBounds(bounds);
+    }
+    //add listener on each gps
+    function attachInfoWindow(marker, location) {
+        marker.addListener('click', function () {
+            // InfoWindow content
+            var content = '<div id="container">' + '<h3>' + location["username"].toString() + '</h3>' + '<p>' + '<span>' + location["text"].toString() + '</span>' + '<p>' + location["datetime"].toString() + '</div>';
+            infoWindow.setContent(content);
+            infoWindow.open(marker.get('map'), marker);
+        });
+    }
+
+    function searchKeyWord() {
+        //clear queryMarkerArray
+        queryMarkerArray = new Array();
+        //stop timer
+        clearInterval(fetchTime);
+        //clear map
+        clearMarker();
+        //search
+        var keyword = document.getElementById('searchInput');
+        $.getJSON(esUrl + "search?keyword=" + keyword.value, function (data) {
+            putIntoQueryArray(data.hits.hits, "_source");
+        });
+    }
+
+    function putIntoQueryArray(data, field) {
+        if (data.length == 0) {
+            alert("sorry, there is no data. go back to the origin");
+            resetMap();
+            return;
+        }
+
+        clearSearchResult();
+        var tempArray = [];
+        for (var i = 0; i < data.length; i++) {
+            var sourceInfo = data[i][field];
+            var lat = sourceInfo.location[0];
+            var lng = sourceInfo.location[1];
+            //other info
+            var text = sourceInfo.text;
+            var usernmae = sourceInfo.username;
+            var datetime = sourceInfo.date;
+            tempArray.push({
+                "lat": lat
+                , "lng": lng
+                , "text": text
+                , "username": usernmae
+                , "datetime": datetime
+            });
+        }
+        console.log("search temp array length:" + tempArray.length);
+        // declare map
+        var map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 3
+            , center: {
+                lat: -28.024
+                , lng: 140.887
+            }
+        });
+        // Create an array of alphabetical characters used to label the markers.
+        var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        var markers = tempArray.map(function (location, i) {
+            var marker = new google.maps.Marker({
+                position: location
+                , label: labels[i % labels.length]
+                , });
+            //add listener
+            attachInfoWindow(marker, location);
+            return marker;
+        });
+        console.log("query result length:" + markers.length);
+        queryMarkerArray = queryMarkerArray.concat(markers);
+        //plot
+        drawQueryMap();
+        //update search result
+        console.log("queryMarkerArray length:" + queryMarkerArray.length);
+    }
+    //clear marker
+    function clearMarker() {
+        for (var i = 0; i < locationMarkerArray.length; i++) {
+            locationMarkerArray[i].setMap(null);
+        }
+    }
+    //set numbber of results
+    function setNumberOfTweet() {
+        document.getElementById('numberOfTwitters').innerHTML = locationMarkerArray.length;
+    }
+    //clear
+    function clearSearchResult() {
+        queryMarkerArray = new Array();
+        document.getElementById("searchResult").innerHTML = "";
+    }
+    //reset to origin
+    function resetMap() {
+        //clear queryMarkerArray
+        //re-plot locationMarkerArray.
+        clearSearchResult();
+        var map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 3
+            , center: {
+                lat: -28.024
+                , lng: 140.887
+            }
+        });
+        console.log("reset locationMarkerArray length: " + locationMarkerArray.length);
+        //            for (var i = 0; i < locationMarkerArray.length; i++) {
+        //                locationMarkerArray[i].setMap(map);
+        //            }
+        //
+        drawMap();
+        realTimeUpdate();
+    }
+
+
+    //bonus
+    function dropPin(){
+        //stop timer first
+        clearInterval(fetchTime);
+        // declare map
+        var map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 10
+            , center: {
+                lat: 40.7128
+                , lng: -73.968285
+            }
+        });
+
+        pinMark = new google.maps.Marker({
+            draggable: true,
+            position: map.getCenter(),
+            map: map,
+            title: "Pin"
+        });
+        //add confirm window
+        pinMark.addListener('click', function () {
+            // InfoWindow content
             infoWindow = new google.maps.InfoWindow({
                 maxWidth: 350
             });
-            realTimeUpdate();
-        }
-        //call 'fetch' to obtain data
-        function fetchTweet() {
-            $.getJSON(esUrl + "fetch?all", function (data) {
-                if(data.length == 0){
-                    console.log("get 0 result");
-                    fetchNewest();
-                }else{
-                    putIntoArray(data.hits.hits, "_source");
-                    setNumberOfTweet();
-                    console.log("fetch twitter locationMarkerArray: length" + locationMarkerArray.length);
-                }
-            });
-        }
-        //
-        function fetchNewest(){
-            $.getJSON(esUrl + "fetch?all", function (data) {
-                console.log("fetch all size:"+data.length);
-                putIntoArray(data.hits.hits, "_source");
-                setNumberOfTweet();
-                console.log("fetch newest twitter locationMarkerArray: length" + locationMarkerArray.length);
-            });
-        }
-        //real time update
-        function realTimeUpdate() {
-            fetchTime = setInterval(update, 30000);
-        }
+            var content = '<div>lat:'+pinMark.getPosition().lat()+"  lng: "+pinMark.getPosition().lng() +"<div>"+'<button class="btn btn-secondary" onClick="searchNearBy()">OK</button></div>';
+            infoWindow.setContent(content);
+            infoWindow.open(pinMark.get('map'), pinMark);
+        });
+    }
 
-        function update() {
-            fetchTweet(locationMarkerArray);
-            console.log("updating...  locationMarkerArray size: " + locationMarkerArray.length);
+    //search query
+    function searchNearBy(){
+        var distanceSel = document.getElementById("distanceSel");
+        var distance = $("#distanceSel").val();
+        if(!distance){
+            alert("please select a distance scale.");
+            return;
         }
-
-        function putIntoArray(data, field) {
-            if (data.length == 0) {
-                //alert("sorry, there is no data.");
-            }
-            var tempArray = [];
-            for (var i = 0; i < data.length; i++) {
-                var sourceInfo = data[i][field];
-                var lat = sourceInfo.location[0];
-                var lng = sourceInfo.location[1];
-                //other info
-                var text = sourceInfo.text;
-                var usernmae = sourceInfo.username;
-                var datetime = sourceInfo.date;
-                tempArray.push({
-                    "lat": lat
-                    , "lng": lng
-                    , "text": text
-                    , "username": usernmae
-                    , "datetime": datetime
-                });
-            }
-            // declare map
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 3
-                , center: {
-                    lat: -28.024
-                    , lng: 140.887
-                }
-            });
-            // Create an array of alphabetical characters used to label the markers.
-            var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            var markers = tempArray.map(function (location, i) {
-                var marker = new google.maps.Marker({
-                    position: location
-                    , label: labels[i % labels.length]
-                , });
-                //add listener
-                attachInfoWindow(marker, location);
-                return marker;
-            });
-            locationMarkerArray = locationMarkerArray.concat(markers);
-            currentCount++;
-            if (currentCount > maxCount) {
-                //stop timer
-                clearInterval(fetchTime);
-            }
-            //plot
-            drawMap();
-        }
-
-        function drawQueryMap() {
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 3
-                , center: {
-                    lat: 40.7128
-                    , lng: 74.0059
-                }
-            });
-            for (var i = 0; i < queryMarkerArray.length; i++) {
-                queryMarkerArray[i].setMap(map);
-            }
-            // Add a marker clusterer to manage the markers.
-            var markerCluster = new MarkerClusterer(map, queryMarkerArray, {
-                imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
-            });
-            //set bound
-            var bounds = new google.maps.LatLngBounds();
-            for (var i = 0; i < queryMarkerArray.length; i++) {
-                bounds.extend(queryMarkerArray[i].getPosition());
-            }
-            map.fitBounds(bounds);
-            map.setCenter(bounds.getCenter());
-            //set searh result
-            document.getElementById("searchResult").innerHTML = "Matching result:" + queryMarkerArray.length;
-        }
-
-        function drawMap() {
-            // declare map
-            console.log("add cluster locationMarkerArraylength:" + locationMarkerArray.length);
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 3
-                , center: {
-                    lat: -28.024
-                    , lng: 140.887
-                }
-            });
-            for (var i = 0; i < locationMarkerArray.length; i++) {
-                locationMarkerArray[i].setMap(map);
-            }
-            // Add a marker clusterer to manage the markers.
-            var markerCluster = new MarkerClusterer(map, locationMarkerArray, {
-                imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
-            });
-            console.log("set bound...");
-            //set bound
-            var bounds = new google.maps.LatLngBounds();
-            for (var i = 0; i < locationMarkerArray.length; i++) {
-                bounds.extend(locationMarkerArray[i].getPosition());
-            }
-            map.fitBounds(bounds);
-        }
-        //add listener on each gps
-        function attachInfoWindow(marker, location) {
-            marker.addListener('click', function () {
-                // InfoWindow content
-                var content = '<div id="container">' + '<h3>' + location["username"].toString() + '</h3>' + '<p>' + '<span>' + location["text"].toString() + '</span>' + '<p>' + location["datetime"].toString() + '</div>';
-                infoWindow.setContent(content);
-                infoWindow.open(marker.get('map'), marker);
-            });
-        }
-
-        function searchKeyWord() {
-            //clear queryMarkerArray
-            queryMarkerArray = new Array();
-            //stop timer
-            clearInterval(fetchTime);
-            //clear map
-            clearMarker();
-            //search
-            var keyword = document.getElementById('searchInput');
-            $.getJSON(esUrl + "search?keyword=" + keyword.value, function (data) {
-                putIntoQueryArray(data.hits.hits, "_source");
-            });
-        }
-
-        function putIntoQueryArray(data, field) {
-            if (data.length == 0) {
-                alert("sorry, there is no data. go back to the origin");
-                resetMap();
-                return;
-            }
-            alert(JSON.stringify(data));
-            clearSearchResult();
-            var tempArray = [];
-            for (var i = 0; i < data.length; i++) {
-                var sourceInfo = data[i][field];
-                var lat = sourceInfo.location[0];
-                var lng = sourceInfo.location[1];
-                //other info
-                var text = sourceInfo.text;
-                var usernmae = sourceInfo.username;
-                var datetime = sourceInfo.date;
-                tempArray.push({
-                    "lat": lat
-                    , "lng": lng
-                    , "text": text
-                    , "username": usernmae
-                    , "datetime": datetime
-                });
-            }
-            console.log("search temp array length:" + tempArray.length);
-            // declare map
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 3
-                , center: {
-                    lat: -28.024
-                    , lng: 140.887
-                }
-            });
-            // Create an array of alphabetical characters used to label the markers.
-            var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            var markers = tempArray.map(function (location, i) {
-                var marker = new google.maps.Marker({
-                    position: location
-                    , label: labels[i % labels.length]
-                , });
-                //add listener
-                attachInfoWindow(marker, location);
-                return marker;
-            });
-            console.log("query result length:" + markers.length);
-            queryMarkerArray = queryMarkerArray.concat(markers);
-            //plot
-            drawQueryMap();
-            //update search result
-            console.log("queryMarkerArray length:" + queryMarkerArray.length);
-        }
-        //clear marker
-        function clearMarker() {
-            for (var i = 0; i < locationMarkerArray.length; i++) {
-                locationMarkerArray[i].setMap(null);
-            }
-        }
-        //set numbber of results
-        function setNumberOfTweet() {
-            document.getElementById('numberOfTwitters').innerHTML = locationMarkerArray.length;
-        }
-        //clear
-        function clearSearchResult() {
-            queryMarkerArray = new Array();
-            document.getElementById("searchResult").innerHTML = "";
-        }
-        //reset to origin
-        function resetMap() {
-            //clear queryMarkerArray
-            //re-plot locationMarkerArray.
-            clearSearchResult();
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 3
-                , center: {
-                    lat: -28.024
-                    , lng: 140.887
-                }
-            });
-            console.log("reset locationMarkerArray length: " + locationMarkerArray.length);
-            //            for (var i = 0; i < locationMarkerArray.length; i++) {
-            //                locationMarkerArray[i].setMap(map);
-            //            }
-            //
-            drawMap();
-            realTimeUpdate();
-        }
-
-
-        //bonus
-        function dropPin(){
-            //stop timer first
-            clearInterval(fetchTime);
-            // declare map
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 10
-                , center: {
-                    lat: 40.7128
-                    , lng: -73.968285
-                }
-            });
-
-            pinMark = new google.maps.Marker({
-                draggable: true,
-                position: map.getCenter(),
-                map: map,
-                title: "Pin"
-            });
-            //add confirm window
-            pinMark.addListener('click', function () {
-                // InfoWindow content
-                infoWindow = new google.maps.InfoWindow({
-                    maxWidth: 350
-                });
-                var content = '<div>lat:'+pinMark.getPosition().lat()+"  lng: "+pinMark.getPosition().lng() +"<div>"+'<button class="btn btn-secondary" onClick="searchNearBy()">OK</button></div>';
-                infoWindow.setContent(content);
-                infoWindow.open(pinMark.get('map'), pinMark);
-            });
-        }
-
-        //search query
-        function searchNearBy(){
-            var distanceSel = document.getElementById("distanceSel");
-            var distance = $("#distanceSel").val();
-            alert(distance);
-            alert(pinMark.getPosition() + ", distance:"+distance);
-            $.getJSON(esUrl + "search?keyword=" + keyword.value, function (data) {
-                putIntoQueryArray(data.hits.hits, "_source");
-            });
-        }
-    </script>
-    <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
-    <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
-    </script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC78_6hsgGIFMN65oEvD-5-6CrU7L__ia0&callback=initMap">
-    </script>
+        var searchUrl = esUrl + "distance?lat=" + pinMark.getPosition().lat()+"&lon="+pinMark.getPosition().lng()+"&distance="+distance;
+        console.log("search url: "+searchUrl);
+        //alert(pinMark.getPosition() + ", distance:"+distance);
+        $.getJSON(searchUrl, function (data) {
+            putIntoQueryArray(data.hits.hits, "_source");
+        });
+    }
+</script>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+<script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC78_6hsgGIFMN65oEvD-5-6CrU7L__ia0&callback=initMap">
+</script>
 </body>
 
 </html>
