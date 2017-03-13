@@ -9,13 +9,13 @@ public final class Tweet {
     private final String text;
     private final String username;
     private final String date;
-    private final GeoLocation location;
+    private final double[] location;
     public Tweet(long id, String username, String text, String date, GeoLocation location) {
         this.id = id;
         this.username = username;
         this.text = text;
         this.date = date;
-        this.location = location;
+        this.location = new double[] {location.getLatitude(), location.getLongitude()};
     }
 
     public long getId() {
@@ -34,7 +34,7 @@ public final class Tweet {
         return date;
     }
 
-    public GeoLocation getLocation() {
+    public double[] getLocation() {
         return location;
     }
 }
