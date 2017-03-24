@@ -18,13 +18,14 @@ public class TweetFetchServlet extends HttpServlet {
     public void init() throws ServletException {
         TwitterStream stream = new TwitterStream();
         Thread thread = new Thread(stream);
-//        thread.start();
+        thread.start();
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html; charset=UTF-8");
         String res = fetchFromElasticSearch(request.getParameter("all"));
+
 
         try (PrintWriter out = response.getWriter()){
             out.println(res);
@@ -35,6 +36,7 @@ public class TweetFetchServlet extends HttpServlet {
         if (parameter != null) {
             return ElasticSearch.fetchAllTweets();
         }
+
         String temp = lastTime;
         lastTime = DateConvetor.currentDateTime();
         return temp.isEmpty()?ElasticSearch.fetchAllTweets():ElasticSearch.fetchLastestTweets(temp);
