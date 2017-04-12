@@ -62,7 +62,7 @@
     var locationMarkerArray = new Array();
     var queryMarkerArray = new Array();
     var infoWindow;
-    var maxCount = 10000;
+    var maxCount = 1000;
     var currentCount = 0;
     var fetchTime;
     var pinMark;
@@ -355,6 +355,7 @@
             infoWindow = new google.maps.InfoWindow({
                 maxWidth: 350
             });
+            //var content = '<div>lat:'+pinMark.getPosition().lat()+"  lng: "+pinMark.getPosition().lng() +"<div>"+'<button class="btn btn-secondary" onClick="searchNearBy()">OK</button></div>';
             var content = '<div><h4>Explore the World!</h4><h5>Drag the pin to anywhere you like</h5><button class="btn btn-secondary" onClick="searchNearBy()">Search Nearby</button></div>';
             infoWindow.setContent(content);
             infoWindow.open(pinMark.get('map'), pinMark);

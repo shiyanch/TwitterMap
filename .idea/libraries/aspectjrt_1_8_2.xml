@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="aspectjrt-1.8.2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/aspectjrt-1.8.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/aspectjweaver.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/aws-java-sdk-1.11.119.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/commons-codec-1.9.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

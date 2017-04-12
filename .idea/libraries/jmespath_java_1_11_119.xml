@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="jmespath-java-1.11.119">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/jmespath-java-1.11.119.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/joda-time-2.8.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spring-beans-3.0.7.RELEASE.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spring-context-3.0.7.RELEASE.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spring-core-3.0.7.RELEASE.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spring-test-3.0.7.RELEASE.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

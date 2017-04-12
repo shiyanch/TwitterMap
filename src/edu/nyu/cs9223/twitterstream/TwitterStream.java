@@ -1,6 +1,7 @@
 package edu.nyu.cs9223.twitterstream;
 
 import com.google.gson.Gson;
+import edu.nyu.cs9223.aws.SQSQueue;
 import edu.nyu.cs9223.bean.Tweet;
 import edu.nyu.cs9223.elasticsearch.ElasticSearch;
 import edu.nyu.cs9223.util.DateConvetor;
@@ -18,7 +19,10 @@ public class TwitterStream implements Runnable{
                     String date = DateConvetor.convert(status.getCreatedAt());
                     Tweet tweet = new Tweet(status.getId(), status.getUser().getScreenName(),
                             status.getText(), date, status.getGeoLocation());
-                    sendToES(new Gson().toJson(tweet));
+
+                    System.out.println(tweet.toString());
+                    //sendToES(new Gson().toJson(tweet));
+                    sendToSQS(new Gson().toJson(tweet));
                 }
             }
         };
@@ -33,5 +37,9 @@ public class TwitterStream implements Runnable{
 
     private void sendToES(String json) {
         ElasticSearch.indexToElasticSearch(json);
+    }
+
+    private void sendToSQS(String json) {
+        SQSQueue.sendMessage(json);
     }
 }
