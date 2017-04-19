@@ -26,7 +26,6 @@ public class TweetFetchServlet extends HttpServlet {
         response.setContentType("text/html; charset=UTF-8");
         String res = fetchFromElasticSearch(request.getParameter("all"));
 
-
         try (PrintWriter out = response.getWriter()){
             out.println(res);
         }

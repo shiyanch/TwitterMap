@@ -7,7 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class ElasticSearch {
-    private static final String ES_URL = "https://search-cloud-computing-cl3869-mzhj7m6rkltbbqt3zdva34st7e.us-east-1.es.amazonaws.com/test/test-twitter-data/";
+    private static final String ES_URL = "https://search-cloud-computing-6tovx6kfs7vgmikr7njspqulla.us-west-2.es.amazonaws.com/test/test-twitter-data/";
 
     public static void indexToElasticSearch(String body) {
         postWithBody("", body);

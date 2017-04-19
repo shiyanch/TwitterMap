@@ -41,6 +41,10 @@
         <servlet-class>edu.nyu.cs9223.servlet.TweetDistanceServlet</servlet-class>
     </servlet>
 
+    <servlet>
+        <servlet-name>SentimentHandle</servlet-name>
+        <servlet-class>edu.nyu.cs9223.servlet.SentimentHandleServlet</servlet-class>
+    </servlet>
     <!-- Define servlet's URL mapping -->
     <servlet-mapping>
         <servlet-name>TweetFetch</servlet-name>
@@ -54,7 +58,10 @@
         <servlet-name>TweetDistance</servlet-name>
         <url-pattern>/distance</url-pattern>
     </servlet-mapping>
-
+    <servlet-mapping>
+        <servlet-name>SentimentHandle</servlet-name>
+        <url-pattern>/sentiment</url-pattern>
+    </servlet-mapping>
     <error-page>
         <error-code>404</error-code>
         <location>/index.jsp</location>
