@@ -1,11 +1,19 @@
 <component name="ArtifactManager">
-  <artifact type="exploded-war" name="TwitterMap:war exploded">
+  <artifact type="war" name="TwitterMap:war exploded">
     <output-path>$PROJECT_DIR$/out/artifacts/TwitterMap_war_exploded</output-path>
-    <root id="root">
+    <root id="archive" name="TwitterMap_war exploded.war">
       <element id="javaee-facet-resources" facet="TwitterMap/web/Web" />
       <element id="directory" name="WEB-INF">
         <element id="directory" name="classes">
           <element id="module-output" name="TwitterMap" />
+        </element>
+        <element id="directory" name="lib">
+          <element id="library" level="project" name="gson-2.8.0" />
+          <element id="library" level="project" name="aws-java-sdk-1.11.119" />
+          <element id="library" level="project" name="commons-codec-1.10" />
+          <element id="library" level="project" name="commons-logging-1.1.3" />
+          <element id="library" level="project" name="jackson-annotations-2.8.0" />
+          <element id="library" level="project" name="jackson-databind-2.8.8.1" />
         </element>
       </element>
     </root>

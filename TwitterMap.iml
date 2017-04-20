@@ -29,5 +29,8 @@
     <orderEntry type="library" name="freemarker-2.3.9" level="project" />
     <orderEntry type="library" name="httpclient-4.5.2" level="project" />
     <orderEntry type="library" name="jmespath-java-1.11.119" level="project" />
+    <orderEntry type="library" name="jackson-databind-2.8.8.1" level="project" />
+    <orderEntry type="library" name="commons-codec-1.10" level="project" />
+    <orderEntry type="library" name="jackson-annotations-2.8.0" level="project" />
   </component>
 </module>

@@ -6,6 +6,7 @@ import edu.nyu.cs9223.bean.Tweet;
 import edu.nyu.cs9223.elasticsearch.ElasticSearch;
 import edu.nyu.cs9223.util.DateConvetor;
 import twitter4j.*;
+import twitter4j.conf.ConfigurationBuilder;
 
 public class TwitterStream implements Runnable{
     private final twitter4j.TwitterStream stream;
@@ -26,7 +27,14 @@ public class TwitterStream implements Runnable{
                 }
             }
         };
-        this.stream = new TwitterStreamFactory().getInstance();
+        ConfigurationBuilder cb = new ConfigurationBuilder();
+        cb.setDebugEnabled(true)
+                .setJSONStoreEnabled(true)
+                .setOAuthConsumerKey("Q80weJEF41YWSEygm0GfoXvY6")
+                .setOAuthConsumerSecret("hAuSwLUixguyHykLpqSRmqFeVqdAHSxejugXRXLbyx0ZoWNVnw")
+                .setOAuthAccessToken("839255398418898944-KX6uOlhJvxytECkTCF4FZyI5wfYMJeY")
+                .setOAuthAccessTokenSecret("RVmFnWOeMDAmSAhJcuUAXUljUEc13mhooJ5Mnp9l9ZDw4");
+        this.stream = new TwitterStreamFactory(cb.build()).getInstance();
         this.stream.addListener(listener);
     }
 
