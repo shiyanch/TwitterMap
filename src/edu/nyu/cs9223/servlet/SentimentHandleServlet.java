@@ -17,10 +17,8 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Random;
 import java.util.Scanner;
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Map;
 import java.util.logging.Logger;
 
 public class SentimentHandleServlet extends HttpServlet {
