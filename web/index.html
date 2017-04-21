@@ -64,7 +64,7 @@
         var locationMarkerArray = new Array();
         var queryMarkerArray = new Array();
         var infoWindow;
-        var maxCount = 1000;
+        var maxCount = 200;
         var currentCount = 0;
         var fetchTime;
         var pinMark;
@@ -165,16 +165,18 @@
                         , scale: 6
                     }
                 });
+                currentCount++;
                 //add listener
                 attachInfoWindow(marker, location);
                 return marker;
             });
             locationMarkerArray = locationMarkerArray.concat(markers);
-            currentCount++;
-            if (currentCount > maxCount) {
-                //stop timer
-                clearInterval(fetchTime);
-            }
+            //        if (currentCount > maxCount) {
+            //            //stop timer
+            //            alert("reach max count");
+            //            clearInterval(fetchTime);
+            //        }
+            checkReachMaximum();
             //plot
             drawMap();
         }
@@ -218,7 +220,7 @@
             for (var i = 0; i < locationMarkerArray.length; i++) {
                 locationMarkerArray[i].setMap(map);
             }
-            // Add a marker clusterer to manage the markers.
+            //Add a marker clusterer to manage the markers.
             //        var markerCluster = new MarkerClusterer(map, locationMarkerArray, {
             //            imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
             //        });
@@ -346,6 +348,7 @@
             console.log("reset locationMarkerArray length: " + locationMarkerArray.length);
             drawMap();
             realTimeUpdate();
+            checkReachMaximum();
         }
         //bonus
         function dropPin() {
@@ -420,6 +423,14 @@
             }
             catch (err) {
                 return "#000000";
+            }
+        }
+
+        function checkReachMaximum() {
+            if (currentCount > maxCount) {
+                //stop timer
+                alert("reach max count");
+                clearInterval(fetchTime);
             }
         }
     </script>
