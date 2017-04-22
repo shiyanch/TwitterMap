@@ -19,7 +19,7 @@ public class SQSQueue {
     private static String queueURL = "";
 
     static {
-        credentials = new BasicAWSCredentials("AKIAITPI6U23VQLLC7ZQ", "5KZyajmwiTQUFzuMH/PekHBkkKTcCKa1dNwggAa4");
+        credentials = new BasicAWSCredentials("", "");
         sqs = new AmazonSQSClient(credentials);
         region = Region.getRegion(Regions.US_WEST_2);
         sqs.setRegion(region);

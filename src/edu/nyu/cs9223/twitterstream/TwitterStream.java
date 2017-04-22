@@ -29,10 +29,10 @@ public class TwitterStream implements Runnable{
         ConfigurationBuilder cb = new ConfigurationBuilder();
         cb.setDebugEnabled(true)
                 .setJSONStoreEnabled(true)
-                .setOAuthConsumerKey("Q80weJEF41YWSEygm0GfoXvY6")
-                .setOAuthConsumerSecret("hAuSwLUixguyHykLpqSRmqFeVqdAHSxejugXRXLbyx0ZoWNVnw")
-                .setOAuthAccessToken("839255398418898944-KX6uOlhJvxytECkTCF4FZyI5wfYMJeY")
-                .setOAuthAccessTokenSecret("RVmFnWOeMDAmSAhJcuUAXUljUEc13mhooJ5Mnp9l9ZDw4");
+                .setOAuthConsumerKey("")
+                .setOAuthConsumerSecret("")
+                .setOAuthAccessToken("")
+                .setOAuthAccessTokenSecret("");
         this.stream = new TwitterStreamFactory(cb.build()).getInstance();
         this.stream.addListener(listener);
     }
