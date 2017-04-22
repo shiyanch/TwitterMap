@@ -64,7 +64,7 @@
         var locationMarkerArray = new Array();
         var queryMarkerArray = new Array();
         var infoWindow;
-        var maxCount = 200;
+        var maxCount = 500;
         var currentCount = 0;
         var fetchTime;
         var pinMark;
@@ -113,6 +113,8 @@
         }
 
         function update() {
+            locationMarkerArray = new Array();
+            currentCount = 0;
             fetchTweet(locationMarkerArray);
             console.log("updating...  locationMarkerArray size: " + locationMarkerArray.length);
         }
